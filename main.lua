@@ -16,7 +16,7 @@ left_square.velocity = 0
 right_square = {}
 right_square.x = 500
 right_square.mass = math.pow(100, d-1)
-right_square.velocity = -2
+right_square.velocity = -0.5
 
 -- other
 block_y = love.graphics.getHeight()/2
@@ -64,7 +64,7 @@ function love.update(dt)
     right_square.x = right_square.x + (right_square.velocity)
 
     -- check collision
-    if (right_square.x-square_size/2 <= left_square.x+square_size/2) then
+    if (right_square.x <= left_square.x+square_size) then
         collision()
     end
 
