@@ -1,8 +1,10 @@
 -- collision-pi-visualizer
 -- (c) Vilhelm Prytz <vilhelm@prytznet.se> 2019
 
+local utf8 = require("utf8")
+
 -- digits of pi
-d = 2
+digits = ""
 
 collisions = 0
 
@@ -14,13 +16,16 @@ left_square.velocity = 0
 
 -- right square
 right_square = {}
-right_square.x = 500
-right_square.mass = math.pow(100, d-1)
+right_square.x = 700
 right_square.velocity = -0.5
 
 -- other
 block_y = love.graphics.getHeight()/2
 square_size = 50
+
+-- state
+state = {}
+state.running = false
 
 function collision()
     collisions = collisions+1
@@ -41,6 +46,32 @@ function wall_collision()
     left_square.velocity = -(left_square.velocity)
 end
 
+function love.textinput(t)
+    if tonumber(t) ~= nil then
+        digits = tostring(digits .. t)
+    end
+end
+
+function love.keypressed(key)
+    if key == "return" then
+        -- set mass
+        right_square.mass = math.pow(100, tonumber(digits)-1)
+
+        -- set squares
+        left_square.x = 200
+        left_square.velocity = 0
+        right_square.x = 700
+        right_square.velocity = -0.5
+
+        -- reset
+        collisions = 0
+        digits = ""
+
+        -- running
+        state.running = true
+    end
+end
+
 function love.draw()
     love.graphics.setBackgroundColor(0, 0, 0)
 
@@ -52,16 +83,25 @@ function love.draw()
     love.graphics.rectangle("fill", right_square.x, block_y, square_size, square_size)
 
     -- display amount of collisions
+    love.graphics.setFont(love.graphics.newFont(14))
     love.graphics.setColor(255, 255, 255) -- white
     love.graphics.print("Collisions: " .. tostring(collisions), 10, 10, 0, 1, 1)
 
     -- fps
     love.graphics.print("FPS: "..tostring(love.timer.getFPS()), 10, 25, 0, 1, 1)
+
+    -- enter digits of pi
+    love.graphics.setFont(love.graphics.newFont(36))
+    if (state.running == false) then
+        love.graphics.print("Enter digits of Pi: "..tostring(digits), 250, 250, 0, 1, 1)
+    end
 end
 
 function love.update(dt)
-    left_square.x = left_square.x + (left_square.velocity)
-    right_square.x = right_square.x + (right_square.velocity)
+    if (state.running == true) then
+        left_square.x = left_square.x + (left_square.velocity)
+        right_square.x = right_square.x + (right_square.velocity)
+    end
 
     -- check collision
     if (right_square.x <= left_square.x+square_size) then
@@ -70,5 +110,10 @@ function love.update(dt)
 
     if (left_square.x < 0) then
         wall_collision()
+    end
+
+    -- check if both are outside screen
+    if (left_square.x > 800 and right_square.x > 800) then
+        state.running = false
     end
 end
