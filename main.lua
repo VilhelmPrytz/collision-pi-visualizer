@@ -26,6 +26,7 @@ square_size = 50
 -- state
 state = {}
 state.running = false
+state.paused = false
 
 function collision()
     collisions = collisions+1
@@ -52,23 +53,40 @@ function love.textinput(t)
     end
 end
 
+function reset()
+    -- set mass
+    right_square.mass = math.pow(100, tonumber(digits)-1)
+
+    -- set squares
+    left_square.x = 200
+    left_square.velocity = 0
+    right_square.x = 700
+    right_square.velocity = -0.5
+
+    -- reset
+    collisions = 0
+    digits = ""
+
+    -- running
+    state.running = true
+end
+
 function love.keypressed(key)
-    if key == "return" then
-        -- set mass
-        right_square.mass = math.pow(100, tonumber(digits)-1)
+    if key == "return" and state.running == false then
+        reset()
+    end
 
-        -- set squares
-        left_square.x = 200
-        left_square.velocity = 0
-        right_square.x = 700
-        right_square.velocity = -0.5
-
-        -- reset
-        collisions = 0
+    if key == "escape" then
+        state.running = false
         digits = ""
+    end
 
-        -- running
-        state.running = true
+    if key == "space" and state.running == true then
+        if state.paused == true then
+            state.paused = false
+        else
+            state.paused = true
+        end
     end
 end
 
@@ -90,30 +108,40 @@ function love.draw()
     -- fps
     love.graphics.print("FPS: "..tostring(love.timer.getFPS()), 10, 25, 0, 1, 1)
 
+    -- info
+    love.graphics.print("Press Escape to reset", 10, 50, 0, 1, 1)
+    love.graphics.print("Press Space to pause", 10, 65, 0, 1, 1)
+
     -- enter digits of pi
     love.graphics.setFont(love.graphics.newFont(36))
     if (state.running == false) then
         love.graphics.print("Enter digits of Pi: "..tostring(digits), 250, 250, 0, 1, 1)
     end
+
+    if (state.paused == true) then
+        love.graphics.print("PAUSED", 250, 250, 0, 1, 1)
+    end
 end
 
 function love.update(dt)
-    if (state.running == true) then
+    if (state.running == true and state.paused == false) then
         left_square.x = left_square.x + (left_square.velocity)
         right_square.x = right_square.x + (right_square.velocity)
     end
 
     -- check collision
-    if (right_square.x <= left_square.x+square_size) then
-        collision()
-    end
+    if (state.paused == false) then
+        if (right_square.x <= left_square.x+square_size) then
+            collision()
+        end
 
-    if (left_square.x < 0) then
-        wall_collision()
-    end
+        if (left_square.x < 0) then
+            wall_collision()
+        end
 
-    -- check if both are outside screen
-    if (left_square.x > 800 and right_square.x > 800) then
-        state.running = false
+        -- check if both are outside screen
+        if (left_square.x > 800 and right_square.x > 800) then
+            state.running = false
+        end
     end
 end
